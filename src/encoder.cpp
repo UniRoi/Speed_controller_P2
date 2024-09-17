@@ -22,12 +22,12 @@ void encoder::init(void)
 {
     // Led.init();
 
-    // use external interrupt 0 
+    // use external interrupt 0, to which the encoder pin A is connected
     EICRA = (1 << ISC01) | (1 << ISC00); // The rising edge of INT0 generates an interrupt request.
     EIMSK = (1 << INT0); // External Interrupt Request 0 Enable
 
     const uint16_t period_ms = 2;
-    /* Timer0 for timebase */
+    /* Timer2 for timebase */
     TCCR0A |= (1 << WGM01); // Set the Timer Mode to CTC
      
     OCR0A = ((((16000000 * period_ms)/ 1000) / 256) - 1);  // Set the value that you want to count to
@@ -72,14 +72,11 @@ int16_t encoder::GetPosition(void)
 
 void encoder::ResetPosition(void)
 {
-    /* disable all interrupts */
-    // cli(); 
     EIMSK = 0;//(0 << INT0); // Disable Interrupt Request 0 Enable
 
     /* set encoder pos to zero for easier calculation */
     i16EncoderPos = 0;
-    /* enable all interrupts */
-    // sei();
+
     EIMSK = (1 << INT0); // External Interrupt Request 0 Enable
 
 }
@@ -105,12 +102,12 @@ void encoder::updatePps(void)
 
 int16_t encoder::GetPps(void)
 {
-    return i16MotorPps * 2;
+    return i16MotorPps * 20;
 }
 
 int16_t encoder::GetRpm(void)
 {
-    return (i16MotorPps * 120);
+    return static_cast<int16_t>((GetPps() / 7.0) *60);
 }
 
 
