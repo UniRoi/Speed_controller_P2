@@ -91,16 +91,24 @@ ISR(INT0_vect)
     // Led.set_lo();
 }
 
-volatile  uint8_t ui8TimerCnt = 0;
+volatile uint8_t ui8PpsCnt = 0;
+volatile uint8_t ui8SpeedCtrlCnt = 0;
 ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 {
     // event to be exicuted every 2ms here
-    ui8TimerCnt++;
-    if(ui8TimerCnt >= 10)
+    ui8PpsCnt++;
+    ui8SpeedCtrlCnt++;
+    if(ui8PpsCnt >= 10)
     {
         /* code to be executed every 20 ms */
-        ui8TimerCnt = 0;
+        ui8PpsCnt = 0;
         Encoder.updatePps();
 
+    }
+
+    if(ui8SpeedCtrlCnt >= 150)
+    {
+      /* code to be exectued every 300 ms */
+      
     }
 }
