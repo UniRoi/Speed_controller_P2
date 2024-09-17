@@ -30,8 +30,8 @@ int main(void)
   Serial.begin(115200);
     // delay(1000);
   
-  Hbridge.set_hi();
-  Led.toggle();
+  // Hbridge.set_hi();
+  // Led.toggle();
   
   int i = 0;
   while (1)
@@ -64,7 +64,7 @@ int main(void)
     if(i16Rps != lastRps)
     {
       lastRps = i16Rps;
-      Led.toggle();
+      // Led.toggle();
       // currTime = micros();
       Serial.print(i16Rps);
       Serial.println();
@@ -103,12 +103,14 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
         /* code to be executed every 20 ms */
         ui8PpsCnt = 0;
         Encoder.updatePps();
+        Hbridge.toggle();
 
     }
 
     if(ui8SpeedCtrlCnt >= 150)
     {
       /* code to be exectued every 300 ms */
-      
+      ui8SpeedCtrlCnt = 0;
+      Led.toggle();
     }
 }
