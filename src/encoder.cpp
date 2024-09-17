@@ -102,7 +102,7 @@ void encoder::updatePps(void)
 
 int16_t encoder::GetPps(void)
 {
-    return i16MotorPps * 20;
+    return i16MotorPps * 50;
 }
 
 int16_t encoder::GetRpm(void)

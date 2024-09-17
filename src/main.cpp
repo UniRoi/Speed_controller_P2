@@ -96,14 +96,11 @@ ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
 {
     // event to be exicuted every 2ms here
     ui8TimerCnt++;
-    if(ui8TimerCnt >= 25)
+    if(ui8TimerCnt >= 10)
     {
-        // bTimerFlag = true;
-        // Led.toggle();
+        /* code to be executed every 20 ms */
         ui8TimerCnt = 0;
         Encoder.updatePps();
 
-
-        // Led.set_lo();
     }
 }
