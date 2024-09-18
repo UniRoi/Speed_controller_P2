@@ -12,7 +12,7 @@ static int16_t lastRps = 0;
 encoder Encoder(2, 3);
 Analog_out ana_out(1);
 
-P_control P_speed(2.2);
+P_control P_speed(2.1);
 
 uint16_t targetRpm = 5000;
 
@@ -42,13 +42,14 @@ int main(void)
   double speed_new = 0;
   while (1)
   {
-    _delay_ms(10);
-    i16Rps = Encoder.GetRpm();
+    // _delay_ms(10);
 
     if (bUpdateSpeed == true)
     {
-      // Serial.print(i16Rps);
-      // Serial.print(" ");
+      i16Rps = Encoder.GetRpm();
+
+      Serial.print(i16Rps);
+      Serial.print(" ");
 
       speed_new = P_speed.update(targetRpm, static_cast<double>(i16Rps));
 
@@ -57,46 +58,32 @@ int main(void)
 
       new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
       
-
-      // speed_new = (speed_new + i16Rps);
-      // if (speed_new > 12342)
-      // {
-      //   speed_new = 12342;
-      // }
-      // else if (speed_new < 0)
-      // {
-      //   speed_new = 130;
-      // }
-
-      // new_duty = static_cast<int>((speed_new * 99) / 12342);
-
-      
       // Serial.print(speed_new);
       // Serial.print(" ");
-      // Serial.print(new_duty);
-      // Serial.println();
+      Serial.print(new_duty);
+      Serial.println();
 
       ana_out.set(new_duty);
       // Serial.println();
       bUpdateSpeed = false;
     }
 
-    if (i16Rps != lastRps)
-    {
-      lastRps = i16Rps;
+    // if (i16Rps != lastRps)
+    // {
+    //   lastRps = i16Rps;
 
-      Serial.print(i16Rps);
-      Serial.println();
-      // Serial.print(currTime);
-      // Serial.println();
-      // Serial.print(lastTime);
-      // Serial.println();
+    //   Serial.print(i16Rps);
+    //   Serial.println();
+    //   // Serial.print(currTime);
+    //   // Serial.println();
+    //   // Serial.print(lastTime);
+    //   // Serial.println();
 
-      // while (1)
-      // {
-      //   /* code */
-      // }
-    }
+    //   // while (1)
+    //   // {
+    //   //   /* code */
+    //   // }
+    // }
   }
   return 0;
 }
