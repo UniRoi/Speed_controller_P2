@@ -42,7 +42,6 @@ int main(void)
   double speed_new = 0;
   while (1)
   {
-    // _delay_ms(10);
 
     if (bUpdateSpeed == true)
     {
@@ -53,37 +52,15 @@ int main(void)
 
       speed_new = P_speed.update(targetRpm, static_cast<double>(i16Rps));
 
-      // Serial.print(speed_new);
-      // Serial.print(" ");
-
       new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
       
-      // Serial.print(speed_new);
-      // Serial.print(" ");
       Serial.print(new_duty);
       Serial.println();
 
       ana_out.set(new_duty);
-      // Serial.println();
       bUpdateSpeed = false;
     }
 
-    // if (i16Rps != lastRps)
-    // {
-    //   lastRps = i16Rps;
-
-    //   Serial.print(i16Rps);
-    //   Serial.println();
-    //   // Serial.print(currTime);
-    //   // Serial.println();
-    //   // Serial.print(lastTime);
-    //   // Serial.println();
-
-    //   // while (1)
-    //   // {
-    //   //   /* code */
-    //   // }
-    // }
   }
   return 0;
 }
@@ -91,9 +68,7 @@ int main(void)
 // interupt service routine of external int0
 ISR(INT0_vect)
 {
-  // Led.set_hi();
   Encoder.updatePos();
-  // Led.set_lo();
 }
 
 volatile uint8_t ui8PpsCnt = 0;
