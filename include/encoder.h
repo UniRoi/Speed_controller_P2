@@ -1,3 +1,6 @@
+#ifndef ENCODER_H
+#define ENCODER_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <digital_in.h>
@@ -27,3 +30,4 @@ public:
     ~encoder();
 };
 
+#endif

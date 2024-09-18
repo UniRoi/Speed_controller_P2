@@ -10,8 +10,8 @@ int Analog_out::init(int period_ms)
 {
     int result = -1;
     pin_out.init();
-    // default duty cycle 50%
-    result = timer.init(period_ms, 50);
+    // default duty cycle 0%
+    result = timer.init(period_ms, 10);
 
     return result;
 }

@@ -1,6 +1,8 @@
 #include <encoder.h>
 #include <util/delay.h>
-#include <digital_out.h>
+// #include <digital_out.h>
+#include <analog_out.h>
+#include <speed_control.h>
 #include <Arduino.h>
 
 #include <avr/interrupt.h>
@@ -8,8 +10,13 @@
 static uint16_t lastEncCnt = 0;
 static int16_t lastRps = 0;
 encoder Encoder(2, 3);
-Digital_out Led(4);
-Digital_out Hbridge(1);
+Analog_out ana_out(1);
+
+P_control P_speed(2.2);
+
+uint16_t targetRpm = 5000;
+
+volatile bool bUpdateSpeed;
 
 int main(void)
 {
@@ -17,10 +24,10 @@ int main(void)
   uint32_t currTime = 0;
   uint16_t ui16EncCnt = 0;
   int16_t i16Rps = 0;
-  
-  
-  Led.init();
-  Hbridge.init();
+
+  bUpdateSpeed = false;
+
+  ana_out.init(10);
 
   // here interrupt registers are set
   Encoder.init();
@@ -28,44 +35,56 @@ int main(void)
 
   // Add serial for part 2
   Serial.begin(115200);
-    // delay(1000);
-  
-  // Hbridge.set_hi();
-  // Led.toggle();
-  
+
   int i = 0;
+  uint8_t brightness{0};
+  int new_duty = 0;
+  double speed_new = 0;
   while (1)
   {
-    // i++;
-    // if (i == 100)
-    // {
-      // Serial.print("Starting measurement\n");
-      
-      // lastTime = micros();
-      
-    // }
-    /* infinity loop */
     _delay_ms(10);
-    // Encoder.update();
-    // Encoder.updatePps();
     i16Rps = Encoder.GetRpm();
 
-    // if(ui16EncCnt != lastEncCnt)
-    // {
-      
-    //   lastEncCnt = ui16EncCnt;
+    if (bUpdateSpeed == true)
+    {
+      // Serial.print(i16Rps);
+      // Serial.print(" ");
 
-    //   // print counter to serial
-    //   Serial.print(ui16EncCnt);
-    //   Serial.println();
-    // }
-    // Serial.print(i16Rps);
-    //   Serial.println();
-    if(i16Rps != lastRps)
+      speed_new = P_speed.update(targetRpm, static_cast<double>(i16Rps));
+
+      // Serial.print(speed_new);
+      // Serial.print(" ");
+
+      new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
+      
+
+      // speed_new = (speed_new + i16Rps);
+      // if (speed_new > 12342)
+      // {
+      //   speed_new = 12342;
+      // }
+      // else if (speed_new < 0)
+      // {
+      //   speed_new = 130;
+      // }
+
+      // new_duty = static_cast<int>((speed_new * 99) / 12342);
+
+      
+      // Serial.print(speed_new);
+      // Serial.print(" ");
+      // Serial.print(new_duty);
+      // Serial.println();
+
+      ana_out.set(new_duty);
+      // Serial.println();
+      bUpdateSpeed = false;
+    }
+
+    if (i16Rps != lastRps)
     {
       lastRps = i16Rps;
-      // Led.toggle();
-      // currTime = micros();
+
       Serial.print(i16Rps);
       Serial.println();
       // Serial.print(currTime);
@@ -77,7 +96,6 @@ int main(void)
       // {
       //   /* code */
       // }
-      
     }
   }
   return 0;
@@ -86,31 +104,42 @@ int main(void)
 // interupt service routine of external int0
 ISR(INT0_vect)
 {
-    // Led.set_hi();
-    Encoder.updatePos();
-    // Led.set_lo();
+  // Led.set_hi();
+  Encoder.updatePos();
+  // Led.set_lo();
 }
 
 volatile uint8_t ui8PpsCnt = 0;
 volatile uint8_t ui8SpeedCtrlCnt = 0;
-ISR (TIMER0_COMPA_vect)  // timer0 overflow interrupt
+ISR(TIMER0_COMPA_vect) // timer0 overflow interrupt
 {
-    // event to be exicuted every 2ms here
-    ui8PpsCnt++;
-    ui8SpeedCtrlCnt++;
-    if(ui8PpsCnt >= 10)
-    {
-        /* code to be executed every 20 ms */
-        ui8PpsCnt = 0;
-        Encoder.updatePps();
-        Hbridge.toggle();
+  // event to be exicuted every 2ms here
+  ui8PpsCnt++;
+  ui8SpeedCtrlCnt++;
+  if (ui8PpsCnt >= 10)
+  {
+    /* code to be executed every 20 ms */
+    ui8PpsCnt = 0;
+    Encoder.updatePps();
+  }
 
-    }
+  if (ui8SpeedCtrlCnt >= 150)
+  {
+    /* code to be exectued every 300 ms */
+    ui8SpeedCtrlCnt = 0;
 
-    if(ui8SpeedCtrlCnt >= 150)
-    {
-      /* code to be exectued every 300 ms */
-      ui8SpeedCtrlCnt = 0;
-      Led.toggle();
-    }
+    bUpdateSpeed = true;
+  }
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+  // action to be taken at the start of the on-cycle
+  ana_out.pin_out.set_hi();
+}
+
+ISR(TIMER1_COMPB_vect)
+{
+  // action to be taken at the start of the off-cycle
+  ana_out.pin_out.set_lo();
 }

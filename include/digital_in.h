@@ -1,3 +1,6 @@
+#ifndef DIGITAL_IN_H
+#define DIGITAL_IN_H
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -23,3 +26,4 @@ public:
     ~Digital_in();
 };
 
+#endif
