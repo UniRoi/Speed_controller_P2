@@ -1,0 +1,29 @@
+@startuml
+
+[*] --> Init
+Init : initialize parameters
+Stop: stopp controller, sleep pin low
+PreOp : waiting for command
+Op : set v to target_velocity
+
+Init : led off
+Stop: led 2Hz
+PreOp : led 1Hz
+Op : led on
+
+PreOp : boot up message
+
+Init --> PreOp
+PreOp --> Op : set_op()
+PreOp --> Stop : stop()
+PreOp --> Init : reset()
+
+Op --> Init : reset()
+Op --> Stop : stop()
+Op --> PreOp : set_pre()
+
+Stop --> Op : set_op()
+Stop --> PreOp : set_pre()
+Stop --> Init : reset()
+
+@enduml
