@@ -13,21 +13,22 @@ Op : set_led(led = on)
 
 PreOp : send_boot_up_message()
 
-PreOp : set_kp(Kp)
-PreOp : set_ti(Ti)
+PreOp : set_kp(kp)
+PreOp : set_ti(ti)
+PreOp : set_type(controller_allgorithm)
 
 Init --> PreOp
-Init --> Stop : emergency_stop()
+Init --> Stop : stop()
 PreOp --> Op : set_op()
-PreOp --> Stop : stop() \n emergency_stop()
+PreOp --> Stop : stop()
 PreOp --> Init : reset()
 
 Op --> Init : reset()
-Op --> Stop : stop() \n emergency_stop()
-Op --> PreOp : set_pre()
+Op --> Stop : stop()
+Op --> PreOp : set_preop()
 
 Stop --> Op : set_op()
-Stop --> PreOp : set_pre()
+Stop --> PreOp : set_preop()
 Stop --> Init : reset()
 
 @enduml

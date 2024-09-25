@@ -2,28 +2,13 @@
 
 [*] --> Init
 Init : initialize parameters
-Stop: stopp controller
-PreOp : waiting for command
 Op : control_velocity(v = target_velocity)
 
 Init : set_led(led = off)
-Stop: set_led(led = 2Hz) 
-PreOp : set_led(led = 1Hz) 
 Op : set_led(led = on)
 
-PreOp : send_boot_up_message()
-
-Init --> PreOp
-PreOp --> Op : set_op()
-PreOp --> Stop : stop()
-PreOp --> Init : reset()
+Init --> Op
 
 Op --> Init : reset()
-Op --> Stop : stop()
-Op --> PreOp : set_pre()
-
-Stop --> Op : set_op()
-Stop --> PreOp : set_pre()
-Stop --> Init : reset()
 
 @enduml
