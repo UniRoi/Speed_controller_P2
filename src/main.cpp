@@ -1,6 +1,6 @@
 #include <encoder.h>
 #include <util/delay.h>
-// #include <digital_out.h>
+#include <digital_out.h>
 #include <analog_out.h>
 #include <speed_control.h>
 #include <Arduino.h>
@@ -8,24 +8,34 @@
 #include <avr/interrupt.h>
 
 // Application#
-#include "init.h"
-#include "pre_op.h"
-#include "operational.h"
-#include "stopped.h"
+// #include "init.h"
+// #include "pre_op.h"
+// #include "operational.h"
+// #include "stopped.h"
+
+enum eStates
+{
+  INIT = 1,
+  PRE_OPERATIONAL = 3,
+  OPERATIONAL = 6,
+  STOPPED = 10
+};
 
 static uint16_t lastEncCnt = 0;
 static int16_t lastRps = 0;
+volatile bool bUpdateSpeed;
+static int command = 0;
+uint16_t targetRpm = 5000;
+
 encoder Encoder(2, 3);
 Analog_out ana_out(1);
+Digital_out led(5);
 
 P_control P_speed(2.1);
 
-uint16_t targetRpm = 5000;
+// Context *context;
 
-volatile bool bUpdateSpeed;
-
-Context *context;
-static int command = 0;
+eStates controllerState = eStates::INIT;
 
 void setup()
 {
@@ -51,51 +61,77 @@ void setup()
   int new_duty = 0;
   double speed_new = 0;
 
-
-  context = new Context(new init_state);
+  // context = new Context(new init_state);
 }
 
 void loop()
 {
+  uint32_t u32TimeNow;
 
-  while (true)
+  u32TimeNow = millis();
+  
+  // send data only when you receive data:
+  if (Serial.available() > 0)
   {
-    // send data only when you receive data:
-    if (Serial.available() > 0)
-    {
-      // read the incoming byte:
-      command = Serial.read();
+    // read the incoming byte:
+    command = Serial.read();
 
-      // say what you got:
-      Serial.print("I received: ");
-      Serial.println(command, DEC);
-    }
-
-    // wait for some time
-    context->do_work();
-
-    // Serial.print(context->getCurrentState());
-    // Serial.println();
-
-    // if event1 occurred (reset)
-    if (command == 'r') 
-    {
-      /* change to idle */
-      context->event1();
-    }
-
-    // if event2 occurred
-    if (((command == 'h') && (context->getCurrentState() == "IdleState")) ||
-        ((command == 'f') && (context->getCurrentState() != "IdleState")))
-    {
-      /* heating or failure */
-      context->event2();
-    }
-
-    _delay_ms(500);
+    // say what you got:
+    Serial.print("I received: ");
+    Serial.println(command, DEC);
   }
 
-  delete context;
+  switch (controllerState)
+  {
+  case eStates::INIT:
+    /* code */
+
+    controllerState = eStates::PRE_OPERATIONAL;
+    break;
+
+  case eStates::PRE_OPERATIONAL:
+    /* led blinks with 1 Hz */
+
+
+    break;
+
+  case eStates::OPERATIONAL:
+    /* led is on */
+    break;
+
+  default:
+  case eStates::STOPPED:
+    /* default / stopped code */
+    /* led blinks with 2 Hz */
+
+    break;
+  }
+
+  //   // wait for some time
+  //   context->do_work();
+
+  //   // Serial.print(context->getCurrentState());
+  //   // Serial.println();
+
+  //   // if event1 occurred (reset)
+  //   if (command == 'r')
+  //   {
+  //     /* change to idle */
+  //     context->event1();
+  //   }
+
+  //   // if event2 occurred
+  //   if (((command == 'h') && (context->getCurrentState() == "IdleState")) ||
+  //       ((command == 'f') && (context->getCurrentState() != "IdleState")))
+  //   {
+  //     /* heating or failure */
+  //     context->event2();
+  //   }
+
+  //   _delay_ms(500);
+  // }
+
+  // delete context;
 }
 
 // int main(void)
@@ -133,7 +169,7 @@ void loop()
 //       speed_new = P_speed.update(targetRpm, static_cast<double>(i16Rps));
 
 //       new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
-      
+
 //       Serial.print(new_duty);
 //       Serial.println();
 
@@ -185,5 +221,3 @@ ISR(TIMER1_COMPB_vect)
   // action to be taken at the start of the off-cycle
   ana_out.pin_out.set_lo();
 }
-
-
