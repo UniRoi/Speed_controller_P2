@@ -6,6 +6,7 @@
 #include <Arduino.h>
 
 #include <avr/interrupt.h>
+#include <sys_time.h>
 
 // Application#
 // #include "init.h"
@@ -21,6 +22,7 @@ enum eStates
   STOPPED = 10
 };
 
+static uint32_t u32LastTime;
 static uint16_t lastEncCnt = 0;
 static int16_t lastRps = 0;
 volatile bool bUpdateSpeed;
@@ -33,6 +35,7 @@ Digital_out led(5);
 
 P_control P_speed(2.1);
 
+sys_time SysTime;
 // Context *context;
 
 eStates controllerState = eStates::INIT;
@@ -48,6 +51,7 @@ void setup()
   bUpdateSpeed = false;
 
   ana_out.init(10);
+  led.init();
 
   // here interrupt registers are set
   Encoder.init();
@@ -61,6 +65,8 @@ void setup()
   int new_duty = 0;
   double speed_new = 0;
 
+  SysTime.init();
+  u32LastTime = SysTime.Get_SysTimeMs();
   // context = new Context(new init_state);
 }
 
@@ -68,7 +74,7 @@ void loop()
 {
   uint32_t u32TimeNow;
 
-  u32TimeNow = millis();
+  u32TimeNow = SysTime.Get_SysTimeMs();
   
   // send data only when you receive data:
   if (Serial.available() > 0)
@@ -85,101 +91,40 @@ void loop()
   {
   case eStates::INIT:
     /* code */
-
+    led.set_lo();
     controllerState = eStates::PRE_OPERATIONAL;
     break;
 
   case eStates::PRE_OPERATIONAL:
     /* led blinks with 1 Hz */
-
+    if((u32TimeNow - u32LastTime) > 500)
+    {
+      led.toggle();
+      u32LastTime = u32TimeNow;
+    }
 
     break;
 
   case eStates::OPERATIONAL:
     /* led is on */
+    led.set_hi();
+
     break;
 
   default:
   case eStates::STOPPED:
     /* default / stopped code */
-    /* led blinks with 2 Hz */
+    /* led blinks with 2 Hz (250 ms for 2 Hz) */
+    if((u32TimeNow - u32LastTime) > 250)
+    {
+      led.toggle();
+      u32LastTime = u32TimeNow;
+    }
 
     break;
   }
 
-  //   // wait for some time
-  //   context->do_work();
-
-  //   // Serial.print(context->getCurrentState());
-  //   // Serial.println();
-
-  //   // if event1 occurred (reset)
-  //   if (command == 'r')
-  //   {
-  //     /* change to idle */
-  //     context->event1();
-  //   }
-
-  //   // if event2 occurred
-  //   if (((command == 'h') && (context->getCurrentState() == "IdleState")) ||
-  //       ((command == 'f') && (context->getCurrentState() != "IdleState")))
-  //   {
-  //     /* heating or failure */
-  //     context->event2();
-  //   }
-
-  //   _delay_ms(500);
-  // }
-
-  // delete context;
 }
-
-// int main(void)
-// {
-//   uint32_t lastTime = 0;
-//   uint32_t currTime = 0;
-//   uint16_t ui16EncCnt = 0;
-//   int16_t i16Rps = 0;
-
-//   bUpdateSpeed = false;
-
-//   ana_out.init(10);
-
-//   // here interrupt registers are set
-//   Encoder.init();
-//   sei();
-
-//   // Add serial for part 2
-//   Serial.begin(115200);
-
-//   int i = 0;
-//   uint8_t brightness{0};
-//   int new_duty = 0;
-//   double speed_new = 0;
-//   while (1)
-//   {
-
-//     if (bUpdateSpeed == true)
-//     {
-//       i16Rps = Encoder.GetRpm();
-
-//       Serial.print(i16Rps);
-//       Serial.print(" ");
-
-//       speed_new = P_speed.update(targetRpm, static_cast<double>(i16Rps));
-
-//       new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
-
-//       Serial.print(new_duty);
-//       Serial.println();
-
-//       ana_out.set(new_duty);
-//       bUpdateSpeed = false;
-//     }
-
-//   }
-//   return 0;
-// }
 
 // interupt service routine of external int0
 ISR(INT0_vect)
@@ -220,4 +165,10 @@ ISR(TIMER1_COMPB_vect)
 {
   // action to be taken at the start of the off-cycle
   ana_out.pin_out.set_lo();
+}
+
+
+ISR(TIMER2_COMPA_vect) // timer2 overflow interrupt
+{
+    SysTime.Inc_SysTimeMs();
 }
