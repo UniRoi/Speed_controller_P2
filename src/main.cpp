@@ -31,7 +31,7 @@ Analog_out ana_out(1);
 Digital_out led(5);
 Digital_in EncFlt(4);
 
-P_control P_speed(2.1);
+Controller* P_speed = new PI_control(0.01,0.05,0.15, 12500, 1);
 
 sys_time SysTime;
 // Context *context;
@@ -56,7 +56,7 @@ void setup()
   sei();
 
   // Add serial for part 2
-  Serial.begin(115200);
+  Serial.begin(9600);
 
   int i = 0;
   uint8_t brightness{0};
