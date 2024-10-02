@@ -66,7 +66,7 @@ void setup()
   Serial.begin(115200);
 
   // SysTime.init();
-  // u32LastTime = SysTime.Get_SysTimeMs();
+  u32LastTime = millis();
   // context = new Context(new init_state);
 }
 
@@ -145,7 +145,7 @@ void loop()
   int new_duty = 0;
   double speed_new = 0;
 
-  // u32TimeNow = SysTime.Get_SysTimeMs();
+  u32TimeNow = millis();
 
   // send data only when you receive data:
   if (Serial.available() > 0)
@@ -253,7 +253,7 @@ void loop()
 
   case eStates::OPERATIONAL:
 
-    fn_PrintDbgMsg("op\n", u32TimeNow);
+    // fn_PrintDbgMsg("op\n", u32TimeNow);
     /* led is on */
     led.set_hi();
     EncSlp.set_hi();
@@ -284,6 +284,7 @@ void loop()
 
     if (bUpdateSpeed == true)
     {
+      TestPin.toggle();
       i16Rps = Encoder.GetRpm();
 
       Serial.print(i16Rps);
@@ -345,7 +346,7 @@ ISR(INT0_vect)
 
 volatile uint8_t ui8PpsCnt = 0;
 volatile uint8_t ui8SpeedCtrlCnt = 0;
-ISR(TIMER0_COMPA_vect) // timer0 overflow interrupt
+ISR(TIMER2_COMPA_vect) // timer0 overflow interrupt
 {
   // event to be exicuted every 2ms here
   ui8PpsCnt++;
@@ -355,7 +356,6 @@ ISR(TIMER0_COMPA_vect) // timer0 overflow interrupt
     /* code to be executed every 20 ms */
     ui8PpsCnt = 0;
     Encoder.updatePps();
-  TestPin.toggle();
   }
     
   if (ui8SpeedCtrlCnt >= 150)
@@ -379,7 +379,7 @@ ISR(TIMER1_COMPB_vect)
   ana_out.pin_out.set_lo();
 }
 
-ISR(TIMER2_COMPA_vect) // timer2 overflow interrupt
-{
-  // SysTime.Inc_SysTimeMs();
-}
+// ISR(TIMER2_COMPA_vect) // timer2 overflow interrupt
+// {
+//   // SysTime.Inc_SysTimeMs();
+// }

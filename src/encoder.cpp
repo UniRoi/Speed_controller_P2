@@ -27,16 +27,15 @@ void encoder::init(void)
     EIMSK = (1 << INT0); // External Interrupt Request 0 Enable
 
     const uint16_t period_ms = 2;
-    /* Timer0 for timebase */
-    TCCR0A |= (1 << WGM01); // Set the Timer Mode to CTC
+    /* Timer2 for timebase */
+    TCCR2A |= (1 << WGM21); // Set the Timer Mode to CTC
      
-    OCR0A = ((((16000000 * period_ms)/ 1000) / 256) - 1);  // Set the value that you want to count to
+    OCR2A = ((((16000000 * period_ms)/ 1000) / 256) - 1);  // Set the value that you want to count to
 
-    TIMSK0 |= (1 << OCIE0A);    // Set the ISR COMPA vect
+    TIMSK2 |= (1 << OCIE2A);    // Set the ISR COMPA vect
 
-    TCCR0B |= (1 << CS02);      // set prescaler to 256 and start the timer
+    TCCR2B = ((1 << CS22) | (1 << CS20));      // set prescaler to 256 and start the timer
 }
-
 
 
 void encoder::updatePos(void)
