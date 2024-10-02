@@ -9,7 +9,7 @@ class Digital_in
 private:
     uint8_t pinMask;
 public:
-    /// @brief init a pin at portc as input
+    /// @brief init a pin at portd as input
     void init();
 
     /// @brief reads defined pin value
@@ -20,8 +20,8 @@ public:
     /// @return True if pin is low
     bool is_lo();
 
-    /// @brief Set a pin of port c as input
-    /// @param pin pin number at portc
+    /// @brief Set a pin of port d as input
+    /// @param pin pin number at portd
     Digital_in(uint8_t pin);
     ~Digital_in();
 };
