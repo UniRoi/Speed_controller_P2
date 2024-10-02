@@ -8,14 +8,13 @@
 #include <avr/interrupt.h>
 #include <sys_time.h>
 
-// Application#
-// #include "init.h"
-// #include "pre_op.h"
-// #include "operational.h"
-// #include "stopped.h"
+#define DEBUG_PRINT
+
+
 
 enum eStates
 {
+  NO_STATE = 0,
   INIT = 1,
   PRE_OPERATIONAL = 3,
   OPERATIONAL = 6,
@@ -70,9 +69,48 @@ void setup()
   // context = new Context(new init_state);
 }
 
+#ifdef DEBUG_PRINT 
+#include <stdio.h> 
+#define dbg_print Serial.print
+#else 
+#define dbg_print(...) /**/ 
+#endif 
+
+enum eStates fn_checkForTransition(int cmd)
+{
+  enum eStates Transition = NO_STATE;
+
+  if(cmd == 'o')
+  {
+    Transition = eStates::OPERATIONAL;
+  }
+  else if (cmd == 'p')
+  {
+    Transition = eStates::PRE_OPERATIONAL;
+  }
+  else if (cmd == 'r')
+  {
+    Transition = eStates::INIT;
+  }
+  
+  return Transition;
+}
+
+void fn_PrintDbgMsg(const char* msg, uint32_t TimeNow)
+{
+  static uint32_t LastTime = 0;
+
+  if((TimeNow - LastTime) > 500)
+  {
+    dbg_print(msg);
+    LastTime = TimeNow;
+  }
+}
+
 void loop()
 {
   uint32_t u32TimeNow;
+  eStates eStateTransition;
 
   u32TimeNow = SysTime.Get_SysTimeMs();
   
@@ -91,11 +129,15 @@ void loop()
   {
   case eStates::INIT:
     /* code */
+    dbg_print("Init\n");
+    command = 0;
+
     led.set_lo();
     controllerState = eStates::PRE_OPERATIONAL;
     break;
 
   case eStates::PRE_OPERATIONAL:
+    fn_PrintDbgMsg("pre_op\n", u32TimeNow);
     /* led blinks with 1 Hz */
     if((u32TimeNow - u32LastTime) > 500)
     {
@@ -103,16 +145,36 @@ void loop()
       u32LastTime = u32TimeNow;
     }
 
+    eStateTransition = fn_checkForTransition(command);
+
+    if((eStateTransition == eStates::INIT) || (eStateTransition == eStates::OPERATIONAL))
+    {
+      controllerState = eStateTransition;
+      command = 0;
+    }
+    
+
     break;
 
   case eStates::OPERATIONAL:
+
+    fn_PrintDbgMsg("op\n", u32TimeNow);
     /* led is on */
     led.set_hi();
+
+    eStateTransition = fn_checkForTransition(command);
+
+    if((eStateTransition == eStates::INIT) || (eStateTransition == eStates::PRE_OPERATIONAL))
+    {
+      controllerState = eStateTransition;
+      command = 0;
+    }
 
     break;
 
   default:
   case eStates::STOPPED:
+    fn_PrintDbgMsg("stopped\n", u32TimeNow);
     /* default / stopped code */
     /* led blinks with 2 Hz (250 ms for 2 Hz) */
     if((u32TimeNow - u32LastTime) > 250)
@@ -120,6 +182,8 @@ void loop()
       led.toggle();
       u32LastTime = u32TimeNow;
     }
+
+
 
     break;
   }
