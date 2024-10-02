@@ -20,18 +20,22 @@ enum eStates
 };
 
 static uint32_t u32LastTime;
-static uint16_t lastEncCnt = 0;
-static int16_t lastRps = 0;
+// static uint16_t lastEncCnt = 0;
+// static int16_t lastRps = 0;
 volatile bool bUpdateSpeed;
 static int command = 0;
-uint16_t targetRpm = 5000;
+static uint16_t targetRpm = 5000;
 
 encoder Encoder(2, 3);
 Analog_out ana_out(1);
 Digital_out led(5);
+Digital_out EncSlp(2);
 Digital_in EncFlt(4);
 
-Controller* P_speed = new PI_control(0.01,0.05,0.15, 12500, 1);
+static float m_fKp = 0.01;
+static float m_fTi = 0.05;
+
+Controller *P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
 
 sys_time SysTime;
 
@@ -40,7 +44,6 @@ eStates controllerState = eStates::INIT;
 void setup()
 {
   // put your setup code here, to run once:
-  
 
   bUpdateSpeed = false;
 
@@ -49,15 +52,14 @@ void setup()
 
   // here interrupt registers are set
   Encoder.init();
+  EncFlt.init();
+  EncSlp.init();
+  EncSlp.set_lo();
+
   sei();
 
   // Add serial for part 2
   Serial.begin(115200);
-
-  int i = 0;
-  uint8_t brightness{0};
-  int new_duty = 0;
-  double speed_new = 0;
 
   SysTime.init();
   u32LastTime = SysTime.Get_SysTimeMs();
@@ -102,18 +104,40 @@ void fn_PrintDbgMsg(const char *msg, uint32_t TimeNow)
   }
 }
 
+bool fn_IsEncInFault(uint32_t TimeNow, bool bFltLogic)
+{
+  static uint32_t LastTime = 0;
+  bool bRet = false;
+
+  if (bFltLogic == true)
+  {
+    if ((TimeNow - LastTime) > 5)
+    {
+      bRet = true;
+    }
+  }
+  else
+  {
+    // bLastFltLogic = bFltLogic;
+    LastTime = TimeNow;
+  }
+
+  return bRet;
+}
+
 void loop()
 {
   uint32_t u32TimeNow;
   eStates eStateTransition;
   bool bFltState = false;
-  uint32_t lastTime = 0;
-  uint32_t currTime = 0;
-  uint16_t ui16EncCnt = 0;
+  bool bResume = false;
+  // uint32_t lastTime = 0;
+  // uint32_t currTime = 0;
+  // uint16_t ui16EncCnt = 0;
   int16_t i16Rps = 0;
 
-  int i = 0;
-  uint8_t brightness{0};
+  // int i = 0;
+  // uint8_t brightness{0};
   int new_duty = 0;
   double speed_new = 0;
 
@@ -130,7 +154,7 @@ void loop()
     Serial.println(command, DEC);
   }
 
-  bFltState = EncFlt.is_hi();
+  bFltState = fn_IsEncInFault(u32TimeNow, EncFlt.is_lo());
   eStateTransition = fn_checkForTransition(command);
 
   switch (controllerState)
@@ -139,6 +163,7 @@ void loop()
     /* code */
     dbg_print("Init\n");
     command = 0;
+    EncSlp.set_lo();
 
     led.set_lo();
     controllerState = eStates::PRE_OPERATIONAL;
@@ -153,6 +178,54 @@ void loop()
       led.toggle();
       u32LastTime = u32TimeNow;
     }
+    EncSlp.set_lo();
+
+    // if (command == 'k')
+    // {
+    //   Serial.println("***");
+    //   Serial.print("Current value for Kp is: ");
+    //   Serial.println(m_fKp);
+    //   Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
+    //   float newKp;
+    //   while (bResume == false)
+    //   {
+    //     if (Serial.available() > 0)
+    //     {
+    //       newKp = Serial.parseFloat();
+    //       if (newKp != 0)
+    //       {
+    //         Serial.print("New Kp value is: ");
+    //         Serial.println(newKp);
+    //         m_fKp = newKp;
+    //         bResume = true;
+    //         command = 0;
+    //       }
+    //     }
+    //   }
+    // }
+    // if (command == 't')
+    // {
+    //   Serial.println("***");
+    //   Serial.print("Current value for Ti is: ");
+    //   Serial.println(m_fTi);
+    //   Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
+    //   float newTi;
+    //   while (bResume == false)
+    //   {
+    //     if (Serial.available() > 0)
+    //     {
+    //       newTi = Serial.parseFloat();
+    //       if (newTi != 0)
+    //       {
+    //         Serial.print("New Ti value is: ");
+    //         Serial.println(newTi);
+    //         m_fKp = newTi;
+    //         bResume = true;
+    //         command = 0;
+    //       }
+    //     }
+    //   }
+    // }
 
     // eStateTransition = fn_checkForTransition(command);
     if (bFltState == true)
@@ -173,6 +246,7 @@ void loop()
     fn_PrintDbgMsg("op\n", u32TimeNow);
     /* led is on */
     led.set_hi();
+    EncSlp.set_hi();
 
     if (bUpdateSpeed == true)
     {
@@ -183,16 +257,14 @@ void loop()
 
       speed_new = P_speed->update(targetRpm, static_cast<double>(i16Rps));
 
-      new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
-      
+      new_duty = (constrain(speed_new / targetRpm, 0.1, 0.9) * 100);
+
       Serial.print(new_duty);
       Serial.println();
 
       ana_out.set(new_duty);
       bUpdateSpeed = false;
     }
-
-    
 
     if (bFltState == true)
     {
@@ -210,6 +282,7 @@ void loop()
   default:
   case eStates::STOPPED:
     fn_PrintDbgMsg("stopped\n", u32TimeNow);
+    EncSlp.set_lo();
     /* default / stopped code */
     /* led blinks with 2 Hz (250 ms for 2 Hz) */
     if ((u32TimeNow - u32LastTime) > 250)
