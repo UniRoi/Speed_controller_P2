@@ -1,16 +1,20 @@
 
 # Part 1
-![Image](./images/StateDiagram.png)
+State Diagram:
+![Image](./images/StateDiagram_part1.png)
 
 
 # Part 2
+State Diagram:
+![Image](./images/StateDiagram_part2.png)
+
 Fault detection:
  - adding detection of FLT Pin
 
 Problem: entering stop-state after reboot
 With each reboot of our system, it immediately transitioned to the stop state. This fault was visualized using an oscilloscope (see image). The issue arises from a temporary loss of current, as the system requires a significant amount of electricity during startup. Consequently, an error is triggered. The state machine detects this fault and transitions directly to the stop state, even if the fault lasts only for a brief moment. The solution was to implement input debouncing, which prevents minor fluctuations from impacting our system.
 
-![Image2](./images/fault_detection.png)
+![Image2](./images/Part2_Fault_detection.png)
 
 # Part 3
 The PI Controller gets 5 arguments: Kp, Ti, dt, maxOutput and minOutput. Kp and Ti are needed for the tuning of the controller, dt is needed to calculate the integral correctly and maxOutput and minOutput are there for Anti-Windup.
@@ -22,3 +26,9 @@ For testing the PI Controller we have 4 Tests:
 - test_PI_control_windup_protection: Testing the upper limit of saturation in the special case when the integral is exceeding it.  
 
 All tests work and pass.
+
+
+# Part 4
+State Diagram:
+![StateChart](./images/StateDiagramm_complete.png)
+
