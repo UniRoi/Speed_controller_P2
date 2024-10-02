@@ -137,6 +137,7 @@ void loop()
 
     led.set_lo();
     controllerState = eStates::PRE_OPERATIONAL;
+    Serial.print("Boot-up\n");
     break;
 
   case eStates::PRE_OPERATIONAL:
