@@ -231,6 +231,20 @@ void loop()
       }
     }
 
+    if(command == 'c')
+    {
+      Serial.print("Using P-control, press v to change to PI-control\n");
+      P_speed = new P_control(m_fKp);
+      command = 0;
+    }
+    if(command = 'v')
+    {
+      Serial.print("Using PI-control, press c to change to P-control\n");
+      P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
+      command = 0;
+    }
+    
+
     // eStateTransition = fn_checkForTransition(command);
     if (bFltState == true)
     {
@@ -241,12 +255,6 @@ void loop()
     {
       controllerState = eStateTransition;
       command = 0;
-
-      if(eStateTransition == eStates::OPERATIONAL)
-      {
-        // delete P_speed;
-        P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
-      }
     }
 
     break;
