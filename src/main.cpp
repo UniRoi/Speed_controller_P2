@@ -10,8 +10,6 @@
 
 #define DEBUG_PRINT
 
-
-
 enum eStates
 {
   NO_STATE = 0,
@@ -31,6 +29,7 @@ uint16_t targetRpm = 5000;
 encoder Encoder(2, 3);
 Analog_out ana_out(1);
 Digital_out led(5);
+Digital_in EncFlt(4);
 
 P_control P_speed(2.1);
 
@@ -69,18 +68,18 @@ void setup()
   // context = new Context(new init_state);
 }
 
-#ifdef DEBUG_PRINT 
-#include <stdio.h> 
+#ifdef DEBUG_PRINT
+#include <stdio.h>
 #define dbg_print Serial.print
-#else 
-#define dbg_print(...) /**/ 
-#endif 
+#else
+#define dbg_print(...) /**/
+#endif
 
 enum eStates fn_checkForTransition(int cmd)
 {
   enum eStates Transition = NO_STATE;
 
-  if(cmd == 'o')
+  if (cmd == 'o')
   {
     Transition = eStates::OPERATIONAL;
   }
@@ -92,15 +91,15 @@ enum eStates fn_checkForTransition(int cmd)
   {
     Transition = eStates::INIT;
   }
-  
+
   return Transition;
 }
 
-void fn_PrintDbgMsg(const char* msg, uint32_t TimeNow)
+void fn_PrintDbgMsg(const char *msg, uint32_t TimeNow)
 {
   static uint32_t LastTime = 0;
 
-  if((TimeNow - LastTime) > 500)
+  if ((TimeNow - LastTime) > 500)
   {
     dbg_print(msg);
     LastTime = TimeNow;
@@ -111,9 +110,10 @@ void loop()
 {
   uint32_t u32TimeNow;
   eStates eStateTransition;
+  bool bFltState = false;
 
   u32TimeNow = SysTime.Get_SysTimeMs();
-  
+
   // send data only when you receive data:
   if (Serial.available() > 0)
   {
@@ -124,6 +124,9 @@ void loop()
     Serial.print("I received: ");
     Serial.println(command, DEC);
   }
+
+  bFltState = EncFlt.is_hi();
+  eStateTransition = fn_checkForTransition(command);
 
   switch (controllerState)
   {
@@ -139,20 +142,23 @@ void loop()
   case eStates::PRE_OPERATIONAL:
     fn_PrintDbgMsg("pre_op\n", u32TimeNow);
     /* led blinks with 1 Hz */
-    if((u32TimeNow - u32LastTime) > 500)
+    if ((u32TimeNow - u32LastTime) > 500)
     {
       led.toggle();
       u32LastTime = u32TimeNow;
     }
 
-    eStateTransition = fn_checkForTransition(command);
-
-    if((eStateTransition == eStates::INIT) || (eStateTransition == eStates::OPERATIONAL))
+    // eStateTransition = fn_checkForTransition(command);
+    if (bFltState == true)
+    {
+      controllerState = eStates::STOPPED;
+    }
+    else if ((eStateTransition == eStates::INIT) ||
+             (eStateTransition == eStates::OPERATIONAL))
     {
       controllerState = eStateTransition;
       command = 0;
     }
-    
 
     break;
 
@@ -162,9 +168,14 @@ void loop()
     /* led is on */
     led.set_hi();
 
-    eStateTransition = fn_checkForTransition(command);
+    
 
-    if((eStateTransition == eStates::INIT) || (eStateTransition == eStates::PRE_OPERATIONAL))
+    if (bFltState == true)
+    {
+      controllerState = eStates::STOPPED;
+    }
+    else if ((eStateTransition == eStates::INIT) ||
+             (eStateTransition == eStates::PRE_OPERATIONAL))
     {
       controllerState = eStateTransition;
       command = 0;
@@ -177,17 +188,22 @@ void loop()
     fn_PrintDbgMsg("stopped\n", u32TimeNow);
     /* default / stopped code */
     /* led blinks with 2 Hz (250 ms for 2 Hz) */
-    if((u32TimeNow - u32LastTime) > 250)
+    if ((u32TimeNow - u32LastTime) > 250)
     {
       led.toggle();
       u32LastTime = u32TimeNow;
     }
 
-
+    if ((eStateTransition == eStates::INIT) ||
+        (eStateTransition == eStates::PRE_OPERATIONAL) ||
+        (eStateTransition == eStates::OPERATIONAL))
+    {
+      controllerState = eStateTransition;
+      command = 0;
+    }
 
     break;
   }
-
 }
 
 // interupt service routine of external int0
@@ -231,8 +247,7 @@ ISR(TIMER1_COMPB_vect)
   ana_out.pin_out.set_lo();
 }
 
-
 ISR(TIMER2_COMPA_vect) // timer2 overflow interrupt
 {
-    SysTime.Inc_SysTimeMs();
+  SysTime.Inc_SysTimeMs();
 }
