@@ -34,17 +34,13 @@ Digital_in EncFlt(4);
 Controller* P_speed = new PI_control(0.01,0.05,0.15, 12500, 1);
 
 sys_time SysTime;
-// Context *context;
 
 eStates controllerState = eStates::INIT;
 
 void setup()
 {
   // put your setup code here, to run once:
-  uint32_t lastTime = 0;
-  uint32_t currTime = 0;
-  uint16_t ui16EncCnt = 0;
-  int16_t i16Rps = 0;
+  
 
   bUpdateSpeed = false;
 
@@ -56,7 +52,7 @@ void setup()
   sei();
 
   // Add serial for part 2
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   int i = 0;
   uint8_t brightness{0};
@@ -111,6 +107,15 @@ void loop()
   uint32_t u32TimeNow;
   eStates eStateTransition;
   bool bFltState = false;
+  uint32_t lastTime = 0;
+  uint32_t currTime = 0;
+  uint16_t ui16EncCnt = 0;
+  int16_t i16Rps = 0;
+
+  int i = 0;
+  uint8_t brightness{0};
+  int new_duty = 0;
+  double speed_new = 0;
 
   u32TimeNow = SysTime.Get_SysTimeMs();
 
@@ -168,6 +173,24 @@ void loop()
     fn_PrintDbgMsg("op\n", u32TimeNow);
     /* led is on */
     led.set_hi();
+
+    if (bUpdateSpeed == true)
+    {
+      i16Rps = Encoder.GetRpm();
+
+      Serial.print(i16Rps);
+      Serial.print(" ");
+
+      speed_new = P_speed->update(targetRpm, static_cast<double>(i16Rps));
+
+      new_duty = (constrain(speed_new/targetRpm, 0.1, 0.9)*100);
+      
+      Serial.print(new_duty);
+      Serial.println();
+
+      ana_out.set(new_duty);
+      bUpdateSpeed = false;
+    }
 
     
 
