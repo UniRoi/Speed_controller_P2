@@ -6,9 +6,8 @@
 #include <Arduino.h>
 
 #include <avr/interrupt.h>
-#include <sys_time.h>
 
-#define DEBUG_PRINT
+#define DEBUG_PRINT // enable debug print messages
 
 enum eStates
 {
@@ -20,8 +19,7 @@ enum eStates
 };
 
 static uint32_t u32LastTime;
-// static uint16_t lastEncCnt = 0;
-// static int16_t lastRps = 0;
+
 volatile bool bUpdateSpeed;
 static int command = 0;
 uint16_t targetRpm = 10000;
@@ -32,14 +30,14 @@ Digital_out led(5);
 Digital_out EncSlp(2);
 Digital_in EncFlt(4);
 
-Digital_out TestPin(3);
+// Digital_out TestPin(3); // output only for testing
 
 static float m_fKp = 0.01;
 static float m_fTi = 0.05;
 
 Controller *P_speed = nullptr;
 
-// sys_time SysTime;
+
 
 eStates controllerState = eStates::INIT;
 
@@ -52,7 +50,7 @@ void setup()
   ana_out.init(10);
   led.init();
 
-  TestPin.init();
+  // TestPin.init();
 
   // here interrupt registers are set
   Encoder.init();
@@ -65,9 +63,7 @@ void setup()
   // Add serial for part 2
   Serial.begin(115200);
 
-  // SysTime.init();
   u32LastTime = millis();
-  // context = new Context(new init_state);
 }
 
 #ifdef DEBUG_PRINT
@@ -135,13 +131,9 @@ void loop()
   eStates eStateTransition;
   bool bFltState = false;
   bool bResume = false;
-  // uint32_t lastTime = 0;
-  // uint32_t currTime = 0;
-  // uint16_t ui16EncCnt = 0;
+
   int16_t i16Rps = 0;
 
-  // int i = 0;
-  // uint8_t brightness{0};
   int new_duty = 0;
   double speed_new = 0;
 
@@ -164,7 +156,7 @@ void loop()
   switch (controllerState)
   {
   case eStates::INIT:
-    /* code */
+    /* Init code */
     dbg_print("Init\n");
     command = 0;
     EncSlp.set_lo();
@@ -237,7 +229,7 @@ void loop()
       P_speed = new P_control(m_fKp);
       command = 0;
     }
-    if(command = 'v')
+    if(command == 'v')
     {
       Serial.print("Using PI-control, press c to change to P-control\n");
       P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
@@ -292,16 +284,18 @@ void loop()
 
     if (bUpdateSpeed == true)
     {
-      TestPin.toggle();
+      // TestPin.toggle();
       i16Rps = Encoder.GetRpm();
 
+      // Serial.print(">Rpm: ");
       Serial.print(i16Rps);
       Serial.print(" ");
 
       speed_new = P_speed->update(targetRpm, static_cast<double>(i16Rps));
 
-      new_duty = (constrain(speed_new / targetRpm, 0.1, 0.9) * 100);
+      new_duty = (constrain(speed_new / targetRpm, 0.01, 0.99) * 100);
 
+      // Serial.print("duty:");
       Serial.print(new_duty);
       Serial.println();
 
@@ -366,7 +360,7 @@ ISR(TIMER2_COMPA_vect) // timer0 overflow interrupt
     Encoder.updatePps();
   }
     
-  if (ui8SpeedCtrlCnt >= 150)
+  if (ui8SpeedCtrlCnt >= 100)
   {
     /* code to be exectued every 300 ms */
     ui8SpeedCtrlCnt = 0;

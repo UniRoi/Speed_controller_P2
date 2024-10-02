@@ -13,7 +13,6 @@ private:
     Digital_in EncoderBPin;
     volatile int16_t i16EncoderPos = 0;
     int16_t i16MotorPps = 0;
-    // int16_t i16MotorRpm = 0;
 public:
 
     void init(void);
