@@ -27,7 +27,7 @@ void encoder::init(void)
     EIMSK = (1 << INT0); // External Interrupt Request 0 Enable
 
     const uint16_t period_ms = 2;
-    /* Timer2 for timebase */
+    /* Timer0 for timebase */
     TCCR0A |= (1 << WGM01); // Set the Timer Mode to CTC
      
     OCR0A = ((((16000000 * period_ms)/ 1000) / 256) - 1);  // Set the value that you want to count to

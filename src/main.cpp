@@ -1,5 +1,5 @@
 #include <encoder.h>
-#include <util/delay.h>
+
 #include <digital_out.h>
 #include <analog_out.h>
 #include <speed_control.h>
@@ -24,7 +24,7 @@ static uint32_t u32LastTime;
 // static int16_t lastRps = 0;
 volatile bool bUpdateSpeed;
 static int command = 0;
-static uint16_t targetRpm = 5000;
+uint16_t targetRpm = 10000;
 
 encoder Encoder(2, 3);
 Analog_out ana_out(1);
@@ -32,12 +32,14 @@ Digital_out led(5);
 Digital_out EncSlp(2);
 Digital_in EncFlt(4);
 
+Digital_out TestPin(3);
+
 static float m_fKp = 0.01;
 static float m_fTi = 0.05;
 
-Controller *P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
+Controller *P_speed = nullptr;
 
-sys_time SysTime;
+// sys_time SysTime;
 
 eStates controllerState = eStates::INIT;
 
@@ -50,6 +52,8 @@ void setup()
   ana_out.init(10);
   led.init();
 
+  TestPin.init();
+
   // here interrupt registers are set
   Encoder.init();
   EncFlt.init();
@@ -61,8 +65,8 @@ void setup()
   // Add serial for part 2
   Serial.begin(115200);
 
-  SysTime.init();
-  u32LastTime = SysTime.Get_SysTimeMs();
+  // SysTime.init();
+  // u32LastTime = SysTime.Get_SysTimeMs();
   // context = new Context(new init_state);
 }
 
@@ -127,7 +131,7 @@ bool fn_IsEncInFault(uint32_t TimeNow, bool bFltLogic)
 
 void loop()
 {
-  uint32_t u32TimeNow;
+  uint32_t u32TimeNow = 0;
   eStates eStateTransition;
   bool bFltState = false;
   bool bResume = false;
@@ -141,7 +145,7 @@ void loop()
   int new_duty = 0;
   double speed_new = 0;
 
-  u32TimeNow = SysTime.Get_SysTimeMs();
+  // u32TimeNow = SysTime.Get_SysTimeMs();
 
   // send data only when you receive data:
   if (Serial.available() > 0)
@@ -180,52 +184,52 @@ void loop()
     }
     EncSlp.set_lo();
 
-    // if (command == 'k')
-    // {
-    //   Serial.println("***");
-    //   Serial.print("Current value for Kp is: ");
-    //   Serial.println(m_fKp);
-    //   Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
-    //   float newKp;
-    //   while (bResume == false)
-    //   {
-    //     if (Serial.available() > 0)
-    //     {
-    //       newKp = Serial.parseFloat();
-    //       if (newKp != 0)
-    //       {
-    //         Serial.print("New Kp value is: ");
-    //         Serial.println(newKp);
-    //         m_fKp = newKp;
-    //         bResume = true;
-    //         command = 0;
-    //       }
-    //     }
-    //   }
-    // }
-    // if (command == 't')
-    // {
-    //   Serial.println("***");
-    //   Serial.print("Current value for Ti is: ");
-    //   Serial.println(m_fTi);
-    //   Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
-    //   float newTi;
-    //   while (bResume == false)
-    //   {
-    //     if (Serial.available() > 0)
-    //     {
-    //       newTi = Serial.parseFloat();
-    //       if (newTi != 0)
-    //       {
-    //         Serial.print("New Ti value is: ");
-    //         Serial.println(newTi);
-    //         m_fKp = newTi;
-    //         bResume = true;
-    //         command = 0;
-    //       }
-    //     }
-    //   }
-    // }
+    if (command == 'k')
+    {
+      Serial.println("***");
+      Serial.print("Current value for Kp is: ");
+      Serial.println(m_fKp);
+      Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
+      float newKp;
+      while (bResume == false)
+      {
+        if (Serial.available() > 0)
+        {
+          newKp = Serial.parseFloat();
+          if (newKp != 0)
+          {
+            Serial.print("New Kp value is: ");
+            Serial.println(newKp);
+            m_fKp = newKp;
+            bResume = true;
+            command = 0;
+          }
+        }
+      }
+    }
+    if (command == 't')
+    {
+      Serial.println("***");
+      Serial.print("Current value for Ti is: ");
+      Serial.println(m_fTi);
+      Serial.println("Now, send the new value from serial monitor, i.e. 0.06");
+      float newTi;
+      while (bResume == false)
+      {
+        if (Serial.available() > 0)
+        {
+          newTi = Serial.parseFloat();
+          if (newTi != 0)
+          {
+            Serial.print("New Ti value is: ");
+            Serial.println(newTi);
+            m_fTi = newTi;
+            bResume = true;
+            command = 0;
+          }
+        }
+      }
+    }
 
     // eStateTransition = fn_checkForTransition(command);
     if (bFltState == true)
@@ -237,6 +241,12 @@ void loop()
     {
       controllerState = eStateTransition;
       command = 0;
+
+      if(eStateTransition == eStates::OPERATIONAL)
+      {
+        // delete P_speed;
+        P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
+      }
     }
 
     break;
@@ -247,6 +257,30 @@ void loop()
     /* led is on */
     led.set_hi();
     EncSlp.set_hi();
+
+    if (command == 's')
+    {
+      Serial.println("***");
+      Serial.print("Current value for TargetRpm is: ");
+      Serial.println(targetRpm);
+      Serial.println("Now, send the new value from serial monitor, i.e. 9050");
+      uint16_t newTargetRpm;
+      while (bResume == false)
+      {
+        if (Serial.available() > 0)
+        {
+          newTargetRpm = Serial.parseInt();
+          if (newTargetRpm != 0)
+          {
+            Serial.print("New TargetRpm value is: ");
+            Serial.println(newTargetRpm);
+            targetRpm = newTargetRpm;
+            bResume = true;
+            command = 0;
+          }
+        }
+      }
+    }
 
     if (bUpdateSpeed == true)
     {
@@ -321,8 +355,9 @@ ISR(TIMER0_COMPA_vect) // timer0 overflow interrupt
     /* code to be executed every 20 ms */
     ui8PpsCnt = 0;
     Encoder.updatePps();
+  TestPin.toggle();
   }
-
+    
   if (ui8SpeedCtrlCnt >= 150)
   {
     /* code to be exectued every 300 ms */
@@ -346,5 +381,5 @@ ISR(TIMER1_COMPB_vect)
 
 ISR(TIMER2_COMPA_vect) // timer2 overflow interrupt
 {
-  SysTime.Inc_SysTimeMs();
+  // SysTime.Inc_SysTimeMs();
 }
