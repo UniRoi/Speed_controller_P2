@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 # Function to read RPM data from the text file
@@ -44,11 +45,12 @@ def plot_rpm(rpm_values, filtered_values, window_size):
 
 # Main function
 if __name__ == "__main__":
-    filename = 'bla.txt'  # Replace with your actual file name
+    cwd = os.getcwd()
+    filename = cwd + '/raw_data/bla.txt'  # Replace with your actual file name
     rpm_values = read_data(filename)
 
     # Define the window size for the moving average
-    window_size = 10  # You can change this value for more or less smoothing
+    window_size = 4  # You can change this value for more or less smoothing
 
     # Apply the moving average
     filtered_values = moving_average(rpm_values, window_size)

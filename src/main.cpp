@@ -32,8 +32,8 @@ Digital_in EncFlt(4);
 
 // Digital_out TestPin(3); // output only for testing
 
-static float m_fKp = 0.01;
-static float m_fTi = 0.05;
+static float m_fKp = 0.27;
+static float m_fTi = 0.41;
 
 Controller *P_speed = nullptr;
 
@@ -232,7 +232,7 @@ void loop()
     if(command == 'v')
     {
       Serial.print("Using PI-control, press c to change to P-control\n");
-      P_speed = new PI_control(m_fKp, m_fTi, 0.15, 12500, 1);
+      P_speed = new PI_control(m_fKp, m_fTi, 0.1, 12500, 1);
       command = 0;
     }
     
@@ -360,9 +360,9 @@ ISR(TIMER2_COMPA_vect) // timer0 overflow interrupt
     Encoder.updatePps();
   }
     
-  if (ui8SpeedCtrlCnt >= 100)
+  if (ui8SpeedCtrlCnt >= 50)
   {
-    /* code to be exectued every 300 ms */
+    /* code to be exectued every 100 ms */
     ui8SpeedCtrlCnt = 0;
 
     bUpdateSpeed = true;
