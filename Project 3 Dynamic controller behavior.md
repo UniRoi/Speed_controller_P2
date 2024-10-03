@@ -54,7 +54,7 @@ calculate parameters with Ku = 0,6: <br>
 Kp = 0,5 * 0,6 = 0,3 <br>
 Tu = 0,5 <br>
 
-PI-Controller:
+PI-Controller: <br>
 Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416 <br>
 Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27 <br>
 Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2 <br>
