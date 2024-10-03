@@ -7,7 +7,7 @@
 
 #include <avr/interrupt.h>
 
-#define DEBUG_PRINT // enable debug print messages
+// #define DEBUG_PRINT // enable debug print messages
 
 enum eStates
 {
