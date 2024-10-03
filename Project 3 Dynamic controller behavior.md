@@ -35,20 +35,26 @@ All tests work and pass.
 
 
 # Part 4
-State Diagram:  
+## State Diagram:  
 ![StateChart](./images/StateDiagramm_complete.png)
 
 
-Contol inputs:<br>
-Enter Pre-Op State 
-...
+## Contol inputs:<br>
+Keyboard input   Description  
+r:       reset/reinit  
+p:       Change to preoperational  
+t:       Enter value for Ti, only in preoperational  
+k:       Enter value for Kp, only in preoperational  
+v:       Change controller type to PI controller, only in preoperational  
+c:       Change controller type to P controller, only in preoperational  
+o:       Change to operational  
 
 
 
-Controller optimization: <br>
+## Controller optimization: <br>
 With Ziegler-Nichols method
 
-P-Controller: <br>
+### P-Controller: <br>
 Try different values <br>
 Ku = <br>
 0,2 <br>
@@ -61,9 +67,18 @@ calculate parameters with Ku = 0,6: <br>
 Kp = 0,5 * 0,6 = 0,3 <br>
 Tu = 0,5 <br>
 
-PI-Controller: <br>
+### PI-Controller: <br>
 Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416 <br>
 Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27 <br>
 Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2 <br>
 
-Step response: <br> 
+## Step response: <br> 
+![StateChart](./images/PI-control_Kp-0.27_Ti-0.41_pwm_duty.png)
+
+## Load response:  
+![Image](./images/PI-control_Kp-0.27_Ti-0.41_load_response.png)
+
+
+# Links
+Git: https://github.com/UniRoi/Speed_controller_P2.git
+Youtube: https://youtu.be/NKPbAvrN5j0?si=MElp68aFCEBPXgnk
