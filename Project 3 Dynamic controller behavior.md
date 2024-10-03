@@ -38,6 +38,13 @@ All tests work and pass.
 State Diagram:  
 ![StateChart](./images/StateDiagramm_complete.png)
 
+
+Contol inputs:<br>
+Enter Pre-Op State 
+...
+
+
+
 Controller optimization: <br>
 With Ziegler-Nichols method
 
@@ -59,5 +66,4 @@ Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416 <br>
 Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27 <br>
 Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2 <br>
 
-
-
+Step response: <br> 
