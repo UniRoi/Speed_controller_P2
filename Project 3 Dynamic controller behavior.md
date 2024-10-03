@@ -1,10 +1,12 @@
 
-# Part 1
+# Project 3: Dynamic controller behaviour 
+
+## Part 1
 State Diagram:  
 ![Image](./images/StateDiagram_part1.png)
 
 
-# Part 2
+## Part 2
 State Diagram:  
 ![Image](./images/StateDiagram_part2.png)
 
@@ -22,7 +24,7 @@ CH4: Fault pin is driven low from the H-bridge for ~ 400 us, here the statemachi
 CH3: Sleep pin is set low 5 ms after the FLT pin is driven low because of our 5 ms debounce time.  
 CH4: Fault pin is driven low and kept low when H-bride detects a fault.  
 
-# Part 3
+## Part 3
 The PI Controller gets 5 arguments: Kp, Ti, dt, maxOutput and minOutput. Kp and Ti are needed for the tuning of the controller, dt is needed to calculate the integral correctly and maxOutput and minOutput are there for Anti-Windup.
 
 For testing the PI Controller we have 4 Tests: 
@@ -34,13 +36,13 @@ For testing the PI Controller we have 4 Tests:
 All tests work and pass.
 
 
-# Part 4
-## State Diagram:  
+## Part 4
+### State Diagram:  
 ![StateChart](./images/StateDiagramm_complete.png)
 
 
-## Contol inputs:<br>
-Keyboard input   Description  
+### Contol inputs:<br>
+Keyboard input:   Description  
 r:       reset/reinit  
 p:       Change to preoperational  
 t:       Enter value for Ti, only in preoperational  
@@ -51,10 +53,10 @@ o:       Change to operational
 
 
 
-## Controller optimization: <br>
+### Controller optimization: <br>
 With Ziegler-Nichols method
 
-### P-Controller: <br>
+#### P-Controller: <br>
 Try different values <br>
 Ku = <br>
 0,2 <br>
@@ -67,18 +69,19 @@ calculate parameters with Ku = 0,6: <br>
 Kp = 0,5 * 0,6 = 0,3 <br>
 Tu = 0,5 <br>
 
-### PI-Controller: <br>
+#### PI-Controller: <br>
 Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416 <br>
 Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27 <br>
 Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2 <br>
 
-## Step response: <br> 
+### Step response: <br> 
 ![StateChart](./images/PI-control_Kp-0.27_Ti-0.41_pwm_duty.png)
 
-## Load response:  
+### Load response: 
+Because of the integral part of the PI controller the performace increased a lot.   
 ![Image](./images/PI-control_Kp-0.27_Ti-0.41_load_response.png)
 
 
-# Links
+## Links
 Git: https://github.com/UniRoi/Speed_controller_P2.git
 Youtube: https://youtu.be/NKPbAvrN5j0?si=MElp68aFCEBPXgnk
