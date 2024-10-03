@@ -38,26 +38,26 @@ All tests work and pass.
 State Diagram:  
 ![StateChart](./images/StateDiagramm_complete.png)
 
-Controller optimization:
-With Ziegler-Nichols method:
+Controller optimization: <br>
+With Ziegler-Nichols method
 
-P-Controller:
-Try different values
-Ku= 
-0,2
-0,4 -- unstable (visible)
-0,6 --> best choice
-0,8 
-1,56 -- strong osszilation
+P-Controller: <br>
+Try different values <br>
+Ku = <br>
+0,2 <br>
+0,4 -- unstable (visible) <br>
+0,6 --> best choice <br>
+0,8  <br>
+1,56 -- strong osszilation <br>
 
-calculate parameters with Ku = 0,6:
-Kp = 0,5 * 0,6 = 0,3
-Tu = 0,5
+calculate parameters with Ku = 0,6: <br>
+Kp = 0,5 * 0,6 = 0,3 <br>
+Tu = 0,5 <br>
 
 PI-Controller:
-Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416
-Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27
-Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2
+Ti = 0,83 * Tu = 0,83 * 0,5 = 0,416 <br>
+Kp = 0,45 * Ku = 0,45 * 0,6 = 0,27 <br>
+Ki = 0,54 * (Ku/Tu) = 0,54 * (0,6/0,5) = 1,2 <br>
 
 
 
